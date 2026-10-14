@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Расход (Chiqim) | LOR Clinic CRM{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h1 class="page-title">Расход (Chiqim)</h1>
+        <p class="text-muted mb-0">
+            {% if user.is_admin %}Все зарегистрированные расходы клиники{% else %}Ваши зарегистрированные расходы{% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Form to add Chiqim -->
+    <div class="col-12 col-lg-4">
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <h5 class="m-0"><i class="fa-solid fa-cart-plus text-primary me-2"></i>Добавить расход</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{% url 'chiqim' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="item_name" class="form-label">Название товара *</label>
+                        <input type="text" class="form-control" id="item_name" name="item_name" required placeholder="Введите название товара/услуги">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Количество *</label>
+                        <input type="number" min="1" class="form-control" id="quantity" name="quantity" required placeholder="1">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="price" class="form-label">Цена за единицу (сум) *</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" min="0" class="form-control" id="price" name="price" required placeholder="0.00">
+                            <span class="input-group-text bg-light border">сум</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Комментарий</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="3" placeholder="Необязательное поле"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary-premium w-100">Сохранить запись</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table of Chiqims -->
+    <div class="col-12 col-lg-8">
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <h5 class="m-0"><i class="fa-solid fa-list-check text-primary me-2"></i>История расходов</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-premium align-middle">
+                    <thead>
+                        <tr>
+                            <th>Товар/Услуга</th>
+                            <th>Кол-во</th>
+                            <th>Цена</th>
+                            <th>Общая сумма</th>
+                            <th>Комментарий</th>
+                            <th>Дата и время</th>
+                            <th>Кто добавил</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in page_obj %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center fw-semibold" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                        <i class="fa-solid fa-box-open"></i>
+                                    </div>
+                                    <span class="fw-semibold text-dark">{{ item.item_name }}</span>
+                                </div>
+                            </td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-end">{{ item.price|floatformat:0 }} сум</td>
+                            <td class="text-danger fw-bold text-end">{{ item.total_price|floatformat:0 }} сум</td>
+                            <td class="text-muted" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                {{ item.comment|default:"—" }}
+                            </td>
+                            <td>{{ item.created_at|date:"d.m.Y H:i" }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark border px-2 py-1">
+                                    <i class="fa-solid fa-user-circle me-1 text-primary"></i>{{ item.author.username }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="fa-solid fa-face-meh fa-2x mb-3 d-block text-muted"></i>
+                                Нет записей расходов за последнее время
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer bg-white border-top p-3 d-flex justify-content-center">
+                <nav aria-label="Pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

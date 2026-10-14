@@ -1,0 +1,442 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Панель управления | LOR Clinic CRM{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h1 class="page-title">Панель управления</h1>
+        <p class="text-muted mb-0">Статистика и аналитика клиники на сегодня</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'reports' %}" class="btn btn-outline-primary border-0 rounded-pill bg-white shadow-sm px-3">
+            <i class="fa-solid fa-file-invoice-dollar me-2"></i>Отчеты клиники
+        </a>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-4 mb-4">
+    <!-- Today Earned -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="metric-info">
+                <span>Сегодня заработано</span>
+                <h3>{{ earned_today|floatformat:0 }} сум</h3>
+            </div>
+            <div class="metric-icon icon-emerald">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Today Spent -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="metric-info">
+                <span>Сегодня потрачено</span>
+                <h3>{{ spent_today|floatformat:0 }} сум</h3>
+            </div>
+            <div class="metric-icon icon-rose">
+                <i class="fa-solid fa-arrow-trend-down"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Today Profit -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="metric-info">
+                <span>Прибыль сегодня</span>
+                <h3 class="{% if profit_today < 0 %}text-danger{% elif profit_today > 0 %}text-success{% endif %}">
+                    {{ profit_today|floatformat:0 }} сум
+                </h3>
+            </div>
+            <div class="metric-icon icon-blue">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cash Balance -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="metric-info">
+                <span>Остаток в кассе</span>
+                <h3 class="text-primary">{{ cash_balance|floatformat:0 }} сум</h3>
+            </div>
+            <div class="metric-icon icon-warning">
+                <i class="fa-solid fa-vault"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Month Income -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="metric-info">
+                <span>Доход за месяц</span>
+                <h3>{{ income_month|floatformat:0 }} сум</h3>
+            </div>
+            <div class="metric-icon icon-emerald">
+                <i class="fa-solid fa-calendar-days"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Year Income -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="metric-info">
+                <span>Доход за год</span>
+                <h3>{{ income_year|floatformat:0 }} сум</h3>
+            </div>
+            <div class="metric-icon icon-blue">
+                <i class="fa-solid fa-calendar-check"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Clients Count -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="metric-info">
+                <span>Всего клиентов</span>
+                <h3>{{ clients_count }}</h3>
+            </div>
+            <div class="metric-icon icon-warning">
+                <i class="fa-solid fa-hospital-user"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Purchased Items -->
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="metric-card">
+            <div class="metric-info">
+                <span>Куплено товаров</span>
+                <h3>{{ purchased_items }} шт</h3>
+            </div>
+            <div class="metric-icon icon-rose">
+                <i class="fa-solid fa-boxes-stacked"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row g-4 mb-4">
+    <!-- Profit chart tabs -->
+    <div class="col-12 col-lg-8">
+        <div class="premium-card h-100">
+            <div class="card-header-premium flex-column flex-sm-row gap-3">
+                <h5 class="m-0">Аналитика прибыли</h5>
+                <ul class="nav nav-pills nav-pills-custom" id="chartTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active btn-sm" id="days-tab" data-bs-toggle="tab" data-bs-target="#days-pane" type="button" role="tab">По дням</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link btn-sm" id="weeks-tab" data-bs-toggle="tab" data-bs-target="#weeks-pane" type="button" role="tab">По неделям</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link btn-sm" id="months-tab" data-bs-toggle="tab" data-bs-target="#months-pane" type="button" role="tab">По месяцам</button>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body p-4">
+                <div class="tab-content" id="chartTabContent">
+                    <div class="tab-pane fade show active" id="days-pane" role="tabpanel" tabindex="0">
+                        <div class="chart-container">
+                            <canvas id="profitDaysChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="weeks-pane" role="tabpanel" tabindex="0">
+                        <div class="chart-container">
+                            <canvas id="profitWeeksChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="months-pane" role="tabpanel" tabindex="0">
+                        <div class="chart-container">
+                            <canvas id="profitMonthsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ratio Doughnut Chart -->
+    <div class="col-12 col-lg-4">
+        <div class="premium-card h-100">
+            <div class="card-header-premium">
+                <h5 class="m-0">Приходы vs Расходы</h5>
+            </div>
+            <div class="card-body p-4 d-flex align-items-center justify-content-center">
+                <div style="position: relative; height: 260px; width: 100%;">
+                    <canvas id="ratioChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Income dynamics line chart -->
+    <div class="col-12">
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <h5 class="m-0">Динамика доходов (за последние 30 дней)</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="chart-container">
+                    <canvas id="dynamicsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Section: Top Clients & History -->
+<div class="row g-4">
+    <!-- Top Clients -->
+    <div class="col-12 col-lg-5">
+        <div class="premium-card h-100">
+            <div class="card-header-premium">
+                <h5 class="m-0"><i class="fa-solid fa-crown text-warning me-2"></i>Топ клиентов по оплатам</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-premium align-middle">
+                    <thead>
+                        <tr>
+                            <th>Клиент</th>
+                            <th class="text-end">Сумма оплат</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in top_clients %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center fw-semibold" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                        {{ c.client_name|slice:":1"|upper }}
+                                    </div>
+                                    <span>{{ c.client_name }}</span>
+                                </div>
+                            </td>
+                            <td class="text-end fw-semibold text-dark">{{ c.total_paid|floatformat:0 }} сум</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="text-center py-4 text-muted">Нет данных по оплатам клиентов</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions history -->
+    <div class="col-12 col-lg-7">
+        <div class="premium-card h-100">
+            <div class="card-header-premium">
+                <h5 class="m-0"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Последняя активность</h5>
+                <a href="{% url 'history' %}" class="btn btn-sm btn-light text-primary fw-semibold">Вся история</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-premium align-middle">
+                    <thead>
+                        <tr>
+                            <th>Действие</th>
+                            <th>Сумма</th>
+                            <th>Дата и время</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in action_history %}
+                        <tr>
+                            <td>
+                                <div>
+                                    <span class="fw-semibold text-dark">{{ item.author }}</span>
+                                    добавил
+                                    {% if item.type == 'kirim' %}
+                                        <span class="badge badge-custom badge-income">Приход</span>
+                                        <small class="text-muted d-block mt-1">Клиент: {{ item.client_or_item }}</small>
+                                    {% else %}
+                                        <span class="badge badge-custom badge-expense">Расход</span>
+                                        <small class="text-muted d-block mt-1">Товар: {{ item.client_or_item }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="fw-semibold {% if item.type == 'kirim' %}text-success{% else %}text-danger{% endif %}">
+                                {% if item.type == 'kirim' %}+{% else %}-{% endif %}{{ item.amount|floatformat:0 }} сум
+                            </td>
+                            <td class="text-muted">{{ item.created_at|date:"d.m.Y H:i" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center py-4 text-muted">Нет недавних действий</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Theme variables matching static/css/style.css
+        const tealPrimary = '#0f766e';
+        const tealSecondary = '#0d9488';
+        const tealLight = '#14b8a6';
+        const rosePrimary = '#e11d48';
+        
+        // --- 1. Profit by Days Chart ---
+        const daysCtx = document.getElementById('profitDaysChart').getContext('2d');
+        new Chart(daysCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_days_labels|safe }},
+                datasets: [{
+                    label: 'Прибыль за день (сум)',
+                    data: {{ chart_days_profits|safe }},
+                    backgroundColor: tealSecondary,
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b' } },
+                    x: { grid: { display: false }, ticks: { color: '#64748b' } }
+                }
+            }
+        });
+
+        // --- 2. Profit by Weeks Chart ---
+        const weeksCtx = document.getElementById('profitWeeksChart').getContext('2d');
+        new Chart(weeksCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_weeks_labels|safe }},
+                datasets: [{
+                    label: 'Прибыль за неделю (сум)',
+                    data: {{ chart_weeks_profits|safe }},
+                    backgroundColor: '#0ea5e9',
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b' } },
+                    x: { grid: { display: false }, ticks: { color: '#64748b' } }
+                }
+            }
+        });
+
+        // --- 3. Profit by Months Chart ---
+        const monthsCtx = document.getElementById('profitMonthsChart').getContext('2d');
+        new Chart(monthsCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_months_labels|safe }},
+                datasets: [{
+                    label: 'Прибыль за месяц (сум)',
+                    data: {{ chart_months_profits|safe }},
+                    backgroundColor: '#8b5cf6',
+                    borderRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b' } },
+                    x: { grid: { display: false }, ticks: { color: '#64748b' } }
+                }
+            }
+        });
+
+        // --- 4. Ratio Doughnut Chart ---
+        const ratioCtx = document.getElementById('ratioChart').getContext('2d');
+        new Chart(ratioCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Приходы', 'Расходы'],
+                datasets: [{
+                    data: [{{ total_kirim_sum }}, {{ total_chiqim_sum }}],
+                    backgroundColor: [tealSecondary, rosePrimary],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, padding: 20, color: '#475569' } }
+                },
+                cutout: '65%'
+            }
+        });
+
+        // --- 5. Dynamics Line Chart ---
+        const dynamicsCtx = document.getElementById('dynamicsChart').getContext('2d');
+        new Chart(dynamicsCtx, {
+            type: 'line',
+            data: {
+                labels: {{ chart_days_labels|safe }},
+                datasets: [{
+                    label: 'Динамика доходов (сум)',
+                    data: {{ chart_days_income|safe }},
+                    borderColor: tealPrimary,
+                    backgroundColor: 'rgba(15, 118, 110, 0.05)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 3,
+                    pointBackgroundColor: tealPrimary
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: '#f1f5f9' }, ticks: { color: '#64748b' } },
+                    x: { grid: { display: false }, ticks: { color: '#64748b' } }
+                }
+            }
+        });
+    });
+</script>
+<style>
+    /* Styling nav pills for active tab */
+    .nav-pills-custom .nav-link {
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        border-radius: 50px;
+        padding: 5px 15px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+    .nav-pills-custom .nav-link.active {
+        background-color: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+</style>
+{% endblock %}

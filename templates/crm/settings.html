@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Настройки | LOR Clinic CRM{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h1 class="page-title">Настройки системы</h1>
+        <p class="text-muted mb-0">Личный профиль и настройки безопасности вашего аккаунта</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- User Profile Card -->
+    <div class="col-12 col-lg-5">
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <h5 class="m-0"><i class="fa-solid fa-user-gear text-primary me-2"></i>Профиль пользователя</h5>
+            </div>
+            <div class="card-body p-4 text-center">
+                <div class="rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center fw-bold mb-3" style="width: 80px; height: 80px; font-size: 2.2rem;">
+                    {{ user.username|slice:":1"|upper }}
+                </div>
+                <h4 class="text-dark mb-1">{{ user.username }}</h4>
+                <p class="text-primary fw-medium mb-3">
+                    {% if user.is_admin %}Администратор системы{% else %}Сотрудник клиники{% endif %}
+                </p>
+                
+                <hr class="my-4" style="border-color: var(--border);">
+                
+                <div class="text-start">
+                    <div class="mb-3">
+                        <small class="text-muted d-block uppercase-sub">Дата создания аккаунта</small>
+                        <span class="fw-semibold text-dark">{{ user.date_joined|date:"d.m.Y H:i" }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted d-block uppercase-sub">Электронная почта</small>
+                        <span class="fw-semibold text-dark">{{ user.email|default:"Не указана" }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted d-block uppercase-sub">Статус входа</small>
+                        <span class="badge badge-custom badge-income"><i class="fa-solid fa-circle-check me-1"></i>Сессия активна</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security (Change Password) Card -->
+    <div class="col-12 col-lg-7">
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <h5 class="m-0"><i class="fa-solid fa-shield-halved text-primary me-2"></i>Смена пароля</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{% url 'settings' %}">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text text-muted" style="font-size: 0.8rem;">{{ field.help_text|safe }}</div>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    
+                    <button type="submit" class="btn btn-primary-premium w-100 mt-2">Обновить пароль</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .uppercase-sub {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 500;
+        margin-bottom: 2px;
+    }
+    
+    /* Auto-style password fields from django form */
+    form input[type="password"] {
+        display: block;
+        width: 100%;
+        padding: 10px 14px;
+        font-size: 0.95rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: var(--text);
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid var(--border);
+        appearance: none;
+        border-radius: var(--radius-sm);
+        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    }
+    form input[type="password"]:focus {
+        color: var(--text);
+        background-color: #fff;
+        border-color: var(--primary-light);
+        outline: 0;
+        box-shadow: 0 0 0 4px var(--primary-bg);
+    }
+</style>
+{% endblock %}

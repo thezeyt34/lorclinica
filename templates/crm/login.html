@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход в систему | LOR Clinic CRM</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap');
+        
+        :root {
+            --primary: #0f766e;
+            --primary-light: #14b8a6;
+            --primary-bg: #f0fdfa;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --border: #e2e8f0;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-card {
+            background-color: #ffffff;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 420px;
+            overflow: hidden;
+            padding: 40px 30px;
+        }
+        
+        .brand-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+        
+        .brand-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 12px rgba(15, 118, 110, 0.2);
+        }
+        
+        .brand-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            color: var(--dark);
+            font-weight: 750;
+            margin-bottom: 5px;
+        }
+        
+        .brand-subtitle {
+            font-size: 0.85rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        
+        .form-control {
+            padding: 12px 16px 12px 42px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+        
+        .form-control:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 4px var(--primary-bg);
+        }
+        
+        .input-group-custom {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        
+        .input-group-custom i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 1rem;
+            transition: color 0.2s;
+            z-index: 10;
+        }
+        
+        .input-group-custom .form-control:focus + i {
+            color: var(--primary);
+        }
+        
+        .btn-login {
+            background: linear-gradient(135deg, var(--primary), #0d9488);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        
+        .btn-login:hover {
+            opacity: 0.95;
+            box-shadow: 0 4px 15px rgba(15, 118, 110, 0.25);
+            transform: translateY(-1px);
+        }
+        
+        .alert {
+            font-size: 0.85rem;
+            border-radius: 10px;
+            padding: 10px 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <div class="brand-header">
+            <div class="brand-icon">
+                <i class="fa-solid fa-ear-deaf"></i>
+            </div>
+            <div class="brand-name">ЛОР Клиника</div>
+            <div class="brand-subtitle">Вход в систему</div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger shadow-sm mb-4" role="alert">
+                    <i class="fa-solid fa-circle-exclamation me-2"></i>{{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="POST" action="{% url 'login' %}">
+            {% csrf_token %}
+            <div class="input-group-custom">
+                <input type="text" class="form-control" name="username" placeholder="Имя пользователя" required autocomplete="username">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            
+            <div class="input-group-custom">
+                <input type="password" class="form-control" name="password" placeholder="Пароль" required autocomplete="current-password">
+                <i class="fa-solid fa-lock"></i>
+            </div>
+            
+            <button type="submit" class="btn btn-login text-white">Войти в CRM</button>
+        </form>
+    </div>
+
+</body>
+</html>

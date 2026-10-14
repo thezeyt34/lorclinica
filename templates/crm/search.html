@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+
+{% block title %}Поиск | LOR Clinic CRM{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h1 class="page-title">Поиск транзакций</h1>
+        <p class="text-muted mb-0">Поиск по названию товара, имени клиента, дате или работнику</p>
+    </div>
+</div>
+
+<!-- Search Input Form -->
+<div class="premium-card mb-4">
+    <div class="card-body p-4">
+        <form method="GET" action="{% url 'search' %}" class="row g-3">
+            <div class="col-12 col-md-9 col-lg-10">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" class="form-control" name="q" value="{{ q }}" placeholder="Введите имя клиента, товар, дату (ГГГГ-ММ-ДД) или имя сотрудника..." required>
+                </div>
+            </div>
+            <div class="col-12 col-md-3 col-lg-2">
+                <button type="submit" class="btn btn-primary-premium w-100"><i class="fa-solid fa-magnifying-glass me-2"></i>Найти</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if q %}
+<div class="row">
+    <div class="col-12">
+        <div class="premium-card">
+            <!-- Search Tabs Header -->
+            <div class="card-header-premium flex-column flex-sm-row gap-3">
+                <h5 class="m-0">Результаты поиска по запросу: "<span class="text-primary">{{ q }}</span>"</h5>
+                <ul class="nav nav-pills nav-pills-custom" id="searchTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active btn-sm" id="search-kirim-tab" data-bs-toggle="tab" data-bs-target="#search-kirim-pane" type="button" role="tab">
+                            Приходы ({{ kirim_results|length }})
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link btn-sm" id="search-chiqim-tab" data-bs-toggle="tab" data-bs-target="#search-chiqim-pane" type="button" role="tab">
+                            Товары / Расходы ({{ chiqim_results|length }})
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="card-body p-0">
+                <div class="tab-content" id="searchTabContent">
+                    <!-- Kirim Search Results -->
+                    <div class="tab-pane fade show active" id="search-kirim-pane" role="tabpanel" tabindex="0">
+                        <div class="table-responsive">
+                            <table class="table table-premium align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Имя клиента</th>
+                                        <th>Сумма прихода</th>
+                                        <th>Комментарий</th>
+                                        <th>Дата и время</th>
+                                        <th>Кто добавил</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for k in kirim_results %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center fw-semibold" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                                    {{ k.client_name|slice:":1"|upper }}
+                                                </div>
+                                                <span class="fw-semibold text-dark">{{ k.client_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-success fw-bold">{{ k.amount|floatformat:0 }} сум</td>
+                                        <td class="text-muted">{{ k.comment|default:"—" }}</td>
+                                        <td>{{ k.created_at|date:"d.m.Y H:i" }}</td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border px-2 py-1">
+                                                <i class="fa-solid fa-user-circle me-1 text-primary"></i>{{ k.author.username }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-5 text-muted">
+                                            <i class="fa-solid fa-face-frown fa-2x mb-3 d-block text-muted"></i>
+                                            Среди приходов ничего не найдено
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Chiqim Search Results -->
+                    <div class="tab-pane fade" id="search-chiqim-pane" role="tabpanel" tabindex="0">
+                        <div class="table-responsive">
+                            <table class="table table-premium align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Название товара</th>
+                                        <th class="text-center">Количество</th>
+                                        <th class="text-end">Цена за ед.</th>
+                                        <th class="text-end">Общая цена</th>
+                                        <th>Кто добавил</th>
+                                        <th>Дата добавления</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for c in chiqim_results %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <div class="rounded-circle bg-danger-subtle text-danger d-flex align-items-center justify-content-center fw-semibold" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                                    <i class="fa-solid fa-box-open"></i>
+                                                </div>
+                                                <span class="fw-semibold text-dark">{{ c.item_name }}</span>
+                                            </div>
+                                        </td>
+                                        <td class="text-center fw-bold">{{ c.quantity }}</td>
+                                        <td class="text-end">{{ c.price|floatformat:0 }} сум</td>
+                                        <td class="text-danger fw-bold text-end">{{ c.total_price|floatformat:0 }} сум</td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border px-2 py-1">
+                                                <i class="fa-solid fa-user-circle me-1 text-primary"></i>{{ c.author.username }}
+                                            </span>
+                                        </td>
+                                        <td>{{ c.created_at|date:"d.m.Y H:i" }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5 text-muted">
+                                            <i class="fa-solid fa-face-frown fa-2x mb-3 d-block text-muted"></i>
+                                            Среди товаров и расходов ничего не найдено
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<style>
+    .nav-pills-custom .nav-link {
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+        border-radius: 50px;
+        padding: 5px 15px;
+        font-weight: 500;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+    }
+    .nav-pills-custom .nav-link.active {
+        background-color: var(--primary);
+        border-color: var(--primary);
+        color: white;
+    }
+</style>
+{% endblock %}

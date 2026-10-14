@@ -1,0 +1,181 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LOR Clinic CRM{% endblock %}</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-ear-deaf"></i>
+                </div>
+                <div class="brand-name">
+                    <span>ЛОР Клиника</span>
+                    <span class="d-block text-muted" style="font-size: 0.65rem; font-weight: normal;">CRM СИСТЕМА</span>
+                </div>
+            </div>
+            
+            <ul class="sidebar-menu">
+                {% if user.is_authenticated %}
+                    {% if user.is_admin %}
+                        <li class="menu-item {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <a href="{% url 'dashboard' %}">
+                                <i class="fa-solid fa-chart-pie"></i>
+                                <span>Панель управления</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                    
+                    <li class="menu-item {% if request.resolver_match.url_name == 'kirim' %}active{% endif %}">
+                        <a href="{% url 'kirim' %}">
+                            <i class="fa-solid fa-wallet"></i>
+                            <span>Приход (Kirim)</span>
+                        </a>
+                    </li>
+                    
+                    <li class="menu-item {% if request.resolver_match.url_name == 'chiqim' %}active{% endif %}">
+                        <a href="{% url 'chiqim' %}">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span>Расход (Chiqim)</span>
+                        </a>
+                    </li>
+                    
+                    <li class="menu-item {% if request.resolver_match.url_name == 'search' %}active{% endif %}">
+                        <a href="{% url 'search' %}">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <span>Поиск</span>
+                        </a>
+                    </li>
+                    
+                    {% if user.is_admin %}
+                        <li class="menu-item {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
+                            <a href="{% url 'reports' %}">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                                <span>Отчеты</span>
+                            </a>
+                        </li>
+                        
+                        <li class="menu-item {% if request.resolver_match.url_name == 'workers' %}active{% endif %}">
+                            <a href="{% url 'workers' %}">
+                                <i class="fa-solid fa-user-tie"></i>
+                                <span>Работники</span>
+                            </a>
+                        </li>
+                        
+                        <li class="menu-item {% if request.resolver_match.url_name == 'history' %}active{% endif %}">
+                            <a href="{% url 'history' %}">
+                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                <span>История действий</span>
+                            </a>
+                        </li>
+                        
+                        <li class="menu-item {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
+                            <a href="{% url 'settings' %}">
+                                <i class="fa-solid fa-gears"></i>
+                                <span>Настройки</span>
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+            
+            <div class="sidebar-footer">
+                {% if user.is_authenticated %}
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            {{ user.username|slice:":1"|upper }}
+                        </div>
+                        <div class="user-details">
+                            <span class="username">{{ user.username }}</span>
+                            <span class="role-badge">
+                                {% if user.is_admin %}Администратор{% else %}Работник{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <a href="{% url 'logout' %}" class="btn btn-sm btn-outline-danger border-0" title="Выйти">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Mobile Top Nav -->
+            <div class="d-lg-none d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm border">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="brand-icon" style="width: 32px; height: 32px; font-size: 1rem;">
+                        <i class="fa-solid fa-ear-deaf"></i>
+                    </div>
+                    <span class="fw-bold text-dark">ЛОР Клиника</span>
+                </div>
+                <button class="mobile-nav-toggle" id="sidebarToggle">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+            </div>
+
+            <!-- Messages / Toast alerts -->
+            {% if messages %}
+                <div class="mb-4">
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert" style="border-radius: var(--radius-sm);">
+                            <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% elif message.tags == 'error' %}fa-circle-exclamation{% else %}fa-circle-info{% endif %} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Content block -->
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Sidebar Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleBtn = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+            
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    sidebar.classList.toggle('show');
+                });
+                
+                // Close sidebar when clicking outside on mobile
+                document.addEventListener('click', function(e) {
+                    if (sidebar.classList.contains('show') && !sidebar.contains(e.target) && e.target !== toggleBtn) {
+                        sidebar.classList.remove('show');
+                    }
+                });
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}История действий | LOR Clinic CRM{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h1 class="page-title">История действий</h1>
+        <p class="text-muted mb-0">Хронологический лог всех операций добавления приходов и расходов</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <h5 class="m-0"><i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>История транзакций клиники</h5>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-premium align-middle">
+                    <thead>
+                        <tr>
+                            <th>Действие</th>
+                            <th>Тип транзакции</th>
+                            <th>Описание / Комментарий</th>
+                            <th>Сумма транзакции</th>
+                            <th>Дата и время</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in page_obj %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle bg-light border d-flex align-items-center justify-content-center text-primary fw-semibold" style="width: 32px; height: 32px;">
+                                        {{ item.author.username|slice:":1"|upper }}
+                                    </div>
+                                    <div>
+                                        <span class="fw-semibold text-dark">{{ item.author.username }}</span>
+                                        <small class="text-muted d-block" style="font-size: 0.75rem;">
+                                            Роль: {% if item.author.is_admin %}Администратор{% else %}Работник{% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if item.type == 'kirim' %}
+                                    <span class="badge badge-custom badge-income">
+                                        <i class="fa-solid fa-square-plus me-1"></i> Приход (Kirim)
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-custom badge-expense">
+                                        <i class="fa-solid fa-square-minus me-1"></i> Расход (Chiqim)
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div>
+                                    {% if item.type == 'kirim' %}
+                                        <strong>Клиент:</strong> {{ item.client_or_item }}
+                                    {% else %}
+                                        <strong>Расход:</strong> {{ item.client_or_item }}
+                                    {% endif %}
+                                    {% if item.comment %}
+                                        <small class="text-muted d-block mt-1"><i class="fa-solid fa-quote-left me-1"></i>{{ item.comment }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="fw-bold {% if item.type == 'kirim' %}text-success{% else %}text-danger{% endif %}">
+                                {% if item.type == 'kirim' %}+{% else %}-{% endif %}{{ item.amount|floatformat:0 }} сум
+                            </td>
+                            <td>{{ item.created_at|date:"d.m.Y H:i:s" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">История действий пуста</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer bg-white border-top p-3 d-flex justify-content-center">
+                <nav aria-label="Pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

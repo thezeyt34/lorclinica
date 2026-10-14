@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление работниками | LOR Clinic CRM{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h1 class="page-title">Сотрудники клиники</h1>
+        <p class="text-muted mb-0">Управление учетными записями персонала и правами доступа</p>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Register New Worker -->
+    <div class="col-12 col-lg-4">
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <h5 class="m-0"><i class="fa-solid fa-user-plus text-primary me-2"></i>Регистрация сотрудника</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" action="{% url 'workers' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create">
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Имя пользователя (логин) *</label>
+                        <input type="text" class="form-control" id="username" name="username" required placeholder="Ivanov">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Электронная почта</label>
+                        <input type="email" class="form-control" id="email" name="email" placeholder="ivanov@example.com">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Пароль *</label>
+                        <input type="password" class="form-control" id="password" name="password" required placeholder="Введите сложный пароль">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="role" class="form-label">Роль в системе *</label>
+                        <select class="form-select" id="role" name="role" required>
+                            <option value="worker" selected>Работник</option>
+                            <option value="admin">Администратор</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary-premium w-100">Создать учетную запись</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workers list -->
+    <div class="col-12 col-lg-8">
+        <div class="premium-card">
+            <div class="card-header-premium">
+                <h5 class="m-0"><i class="fa-solid fa-users text-primary me-2"></i>Список учетных записей</h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-premium align-middle">
+                    <thead>
+                        <tr>
+                            <th>Пользователь</th>
+                            <th>Роль</th>
+                            <th>Статус</th>
+                            <th>Дата регистрации</th>
+                            <th class="text-center">Действие</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for w in workers %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center fw-semibold" style="width: 36px; height: 36px;">
+                                        {{ w.username|slice:":1"|upper }}
+                                    </div>
+                                    <div>
+                                        <span class="fw-semibold text-dark d-block">{{ w.username }}</span>
+                                        <small class="text-muted">{{ w.email|default:"нет почты" }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if w.role == 'admin' %}
+                                    <span class="badge bg-primary-subtle text-primary border px-2 py-1">Администратор</span>
+                                {% else %}
+                                    <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">Работник</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if w.is_active %}
+                                    <span class="badge badge-custom badge-income"><i class="fa-solid fa-circle-check me-1"></i>Активен</span>
+                                {% else %}
+                                    <span class="badge badge-custom badge-expense"><i class="fa-solid fa-circle-xmark me-1"></i>Заблокирован</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ w.date_joined|date:"d.m.Y H:i" }}</td>
+                            <td class="text-center">
+                                {% if w == user %}
+                                    <span class="text-muted d-block" style="font-size: 0.8rem;">(Вы)</span>
+                                {% else %}
+                                    <form method="POST" action="{% url 'workers' %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="toggle_status">
+                                        <input type="hidden" name="user_id" value="{{ w.id }}">
+                                        <button type="submit" class="btn btn-sm {% if w.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" style="font-size: 0.75rem; border-radius: var(--radius-sm);">
+                                            {% if w.is_active %}Заблокировать{% else %}Разблокировать{% endif %}
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">Сотрудники отсутствуют</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
